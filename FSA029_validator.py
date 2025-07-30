@@ -2,32 +2,34 @@ import os
 import sys
 from lxml import etree
 
-quitText = "or type Q to exit program: "
 
-def quitPrompt(message):
+def extraPrompt(message):
     prompt = str(input(message))
     if prompt.upper() == "Q":
         sys.exit("Exited program")
+    elif prompt.upper() == "M":
+        main()
+    return str(prompt)
 
 def checkRequirements(schemaDirectory):
     requiredResources = ["CommonTypes-Schema.xsd"]
+    schemaDirectory = schemaDirectory.rstrip("/")
+    unmetResources = []
     requirementsMet = True
 
 
     for resource in requiredResources:
-        if os.path.isfile(f'{schemaDirectory}/{resource}'):
-            requiredResources.remove(resource)
-
-        else:
+        if not os.path.isfile(f'{schemaDirectory}/{resource}'):
+            unmetResources.append(resource)
             requirementsMet = False
 
     if not requirementsMet:
         message = f"Missing the following in {schemaDirectory}: "
-        for resource in requiredResources:
+        for resource in unmetResources:
             message += f"\n{resource}"
 
-        message += f"\nPlease add requirements to schema directory, {quitText} "
-        quitPrompt(message)
+        message += f"\nPlease add requirements to schema directory: "
+        extraPrompt(message)
         checkRequirements(schemaDirectory)
 
 
@@ -35,19 +37,31 @@ def checkRequirements(schemaDirectory):
 def fsaInput(schema: str, submission: str): # Defining type suggestions
     if os.path.exists(schema):
         if submission.split(".")[-1] == "xml":
-            sourceDirectory = os.path.dirname(schema.rstrip("/")) # Return directory name, removing any trailing whitespace, if a directory is given as a/b/, return a/b
+            if not os.path.isfile(submission):
+                message = (f"Submission file not found, re-enter the correct submission path: ")
+                resubmit = extraPrompt(message)
+                return fsaInput(schema, resubmit)
+                        
+            sourceDirectory = schema.rstrip("/") # Return directory name, removing any trailing whitespace, if a directory is given as a/b/, return a/b
+            
+            if not os.path.isfile(f"{sourceDirectory}/FSA029-Schema.xsd"):
+                message = f"Please add FSA-Schema file to {sourceDirectory}: "
+                resubmit = extraPrompt(message)
+                return fsaInput(schema, submission)
+
             checkRequirements(sourceDirectory)
+            return schema, submission
     
         else:
-            message = f"Wrong file format for submission, re-enter the correct submission, {quitText}"
-            quitPrompt(message)
-            fsaInput(schema, submission)
+            message = f"Wrong file format for submission, re-enter the correct submission: "
+            resubmit = extraPrompt(message)
+            print(resubmit)
+            return fsaInput(schema, resubmit) 
 
     else:
-        print(schema)
-        message = f"Directory not found, re-enter the absolute path, {quitText}"
-        quitPrompt(message)
-        fsaInput(schema, submission)
+        message = f"Directory not found, re-enter the absolute path: "
+        redirSchema = extraPrompt(message)
+        return fsaInput(redirSchema, submission)
 
     
 def validate(fsaSchema: str, fsaSubmission: str):
@@ -78,19 +92,20 @@ def validate(fsaSchema: str, fsaSubmission: str):
 
 
 def main(**kwargs):
+    print("---------------------------------------\nType Q to exit program\nType M to return to main\nPress enter when done\n---------------------------------------\n")
+
     if "schemaDir" in kwargs and kwargs["schemaDir"]:
-        fsaSchema = kwargs["schemaDir"]
+        fsaSchema = str(kwargs["schemaDir"])
     else:
-        fsaSchema = str(input("Enter the absolute path of the directory containing the FSA029 schema: "))
+        fsaSchema = extraPrompt(str("Enter the absolute path of the directory containing the FSA029 schema: "))
 
     if "submission" in kwargs and kwargs["submission"]:
-        fsaSubmission = kwargs["submission"]
+        fsaSubmission = str(kwargs["submission"])
     else:
-        fsaSubmission = str(input("Enter the absolute path of the FSA029 submission: "))
+        fsaSubmission = extraPrompt(str("Enter the absolute path of the FSA029 submission: "))
 
-    print(fsaSchema, fsaSubmission)
 
-    fsaInput(fsaSchema, fsaSubmission)
+    fsaSchema, fsaSubmission = fsaInput(fsaSchema, fsaSubmission)
     validateResults = validate(fsaSchema, fsaSubmission)
     
     match validateResults:

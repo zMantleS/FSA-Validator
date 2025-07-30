@@ -14,7 +14,7 @@ You can run the validator program on its own, where you will be prompted with in
 
 Or, you can pass arguments into a command line to include the paths for both schema directory and submission file (don't  wrap in string quotations).
 
-```python3 fsa_validator(schemaDir=/example, submission=/example.xml```
+```python3 FSA029_validator.py schemaDir=/example submission=/example.xml```
 
 
 ## Notes
