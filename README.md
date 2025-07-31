@@ -36,7 +36,7 @@ Since the element is not expected, I looked at its parent element to identify an
 
 ---
 
-b) If I made no changes to the schema, I would have to create 3 seperate submissions, where I only include 1 of each: IncludedEntities, PartnershipsSoleTraders and LLPs. If I had to make changes to the schema, I would replace choice with sequence, and make minoccurences = 0, to include 1 full submission file.
+b) If I made no changes to the schema, I would have to create 3 seperate submissions, where I only include 1 of each: IncludedEntities, PartnershipsSoleTraders and LLPs. If I had to make changes to the schema, I would add an extra attribute with choice, that minoccurs=1 and maxoccurs=unbounded, to allow for multiple of any in any order in one submission file.
 
 ---
 
