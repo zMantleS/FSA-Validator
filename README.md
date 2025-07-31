@@ -26,4 +26,14 @@ The schema file is assumed to be named "FSA029-Schema.xsd". Its directory name d
 
 ## The extra mile
 
-a) In the schema file, the element "PartnershipsSoleTraders" is not expected
+a) In the full submission file, the element "PartnershipsSoleTraders" is logged as not expected. The valid file provided is a subsection of the full file which works, using a document comparator website such as [TextCompare](https://www.diffchecker.com/text-compare/), which helps the developer in isolating which section is different/removed/added, to make any corrections to the submission or schema file.
+
+Using the information available, of the full submission + valid submission + full schema + error log, I analyse which segments are changed from the website previously mentioned. The section from <PartnershipsSoleTraders> to </LLPS> is added as child elements of capital. The error message states:
+
+```ERROR:SCHEMASV:SCHEMAV_ELEMENT_CONTENT: Element '{urn:fsa-gov-uk:MER:FSA029:4}PartnershipsSoleTraders': This element is not expected.``
+
+Since the element is not expected, I looked at its parent element to identify any possible restricting attributes. There is a choice between 3 elements with minoccurances = 1, between: IncorporatedEntities, PartnershipsSoleTraders and LLPs. The sample only included IncorporatedEntities, which was valid. However, since you can't have a choice of 1, out of 3 mandatory elements, I identified this as the problem.
+
+b) If I made no changes to the schema, I would have to create 3 seperate submissions, where I only include 1 of each: IncludedEntities, PartnershipsSoleTraders and LLPs. If I had to make changes to the schema, I would replace choice with sequence, and make minoccurences = 1, to include 1 full submission.
+
+c) Perhaps a regulator may have included a valid file with an invalid one, to request us to create new submissions from the invalid one for it to pass, or to adjust the schema to allow for multiple elements in one submission.
