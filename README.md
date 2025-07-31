@@ -34,6 +34,10 @@ Using the information available, of the full submission + valid submission + ful
 
 Since the element is not expected, I looked at its parent element to identify any possible restricting attributes. There is a choice between 3 elements with minoccurances = 1, between: IncorporatedEntities, PartnershipsSoleTraders and LLPs. The sample only included IncorporatedEntities, which was valid. However, since you can't have a choice of 1, out of 3 mandatory elements, I identified this as the problem.
 
+---
+
 b) If I made no changes to the schema, I would have to create 3 seperate submissions, where I only include 1 of each: IncludedEntities, PartnershipsSoleTraders and LLPs. If I had to make changes to the schema, I would replace choice with sequence, and make minoccurences = 1, to include 1 full submission.
+
+---
 
 c) Perhaps a regulator may have included a valid file with an invalid one, to request us to create new submissions from the invalid one for it to pass, or to adjust the schema to allow for multiple elements in one submission.
