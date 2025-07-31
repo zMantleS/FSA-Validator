@@ -2,6 +2,7 @@ import os
 import sys
 from lxml import etree
 
+schemaFileName = "FSA029-Schema.xsd"
 
 def extraPrompt(message):
     prompt = str(input(message))
@@ -13,7 +14,7 @@ def extraPrompt(message):
 
 def checkRequirements(schemaDirectory):
     requiredResources = ["CommonTypes-Schema.xsd"]
-    schemaDirectory = schemaDirectory.rstrip("/")
+    schemaDirectory = schemaDirectory.rstrip("/") # Remove if any trailing / from end of path
     unmetResources = []
     requirementsMet = True
 
@@ -44,7 +45,7 @@ def fsaInput(schema: str, submission: str): # Defining type suggestions
                         
             sourceDirectory = schema.rstrip("/") # Return directory name, removing any trailing whitespace, if a directory is given as a/b/, return a/b
             
-            if not os.path.isfile(f"{sourceDirectory}/FSA029-Schema.xsd"):
+            if not os.path.isfile(f"{sourceDirectory}/{schemaFileName}"):
                 message = f"Please add FSA-Schema file to {sourceDirectory}: "
                 resubmit = extraPrompt(message)
                 return fsaInput(schema, submission)
@@ -65,36 +66,60 @@ def fsaInput(schema: str, submission: str): # Defining type suggestions
 
     
 def validate(fsaSchema: str, fsaSubmission: str):
-    try:
-        schemaDir = fsaSchema.rstrip('/')
-        schemaFile = f"{schemaDir}/FSA029-Schema.xsd"
-        schemaTree = etree.parse(schemaFile)
-        schemaRoot = schemaTree.getroot()
-        schemaLocation = schemaRoot.find("{http://www.w3.org/2001/XMLSchema}include")
+        schemaDir = fsaSchema.rstrip('/') # Removes any trailing slashes from directory path in case, to prevent path faults
+        schemaFile = f"{schemaDir}/{schemaFileName}"
 
-        if schemaLocation is not None:
-            schemaLocation.set("schemaLocation", "CommonTypes-Schema.xsd")
-        else:
-            print("Unable to find schemaLocation ")
-
-        schema = etree.XMLSchema(schemaTree)
-        submissionTree = etree.parse(fsaSubmission)
-        isvalid = schema.validate(submissionTree)
-
-        if isvalid:
-            return True
-        else:
-            return False
+        try:
+            schemaTree = etree.parse(schemaFile) # Converts .xsd into an ET object
+            
+        except Exception as E:
+            extraPrompt(f"Error parsing schemafile:\n{E}: ")
+            return main()
         
-    except:
-        print("Something went wrong during validation...")
+        try:
+            schemaRoot = schemaTree.getroot()
+            schemaLocation = schemaRoot.find("{http://www.w3.org/2001/XMLSchema}include") # The namespace is enwrapped by {} where it automatically assigns the prefix found which is xs:
+
+            if schemaLocation is not None:
+                schemaLocation.set("schemaLocation", "CommonTypes-Schema.xsd")
+            else:
+                extraPrompt(f"Unable to find schemaLocation: ")
+                return main()
+            
+        except Exception as E:
+            extraPrompt(f"Error modifying schema:\n{E}: ")
+            return main()
+
+        
+        try:
+            schema = etree.XMLSchema(schemaTree) # Converts the parsed schema elementtree object into an XML schema validator
+
+        except Exception as E:
+            extraPrompt(f"Error parsing schema ET:\n{E} ")
+            return main()
+        
+        try:
+            submissionTree = etree.parse(fsaSubmission) # Converts .xml submission into an ET object
+            isvalid = schema.validate(submissionTree)
+
+            if isvalid:
+                return {"success": True}
+            else:
+                errors = ""
+                for error in schema.error_log:
+                    errors+=f"{error}\n"
+                return {"success": False, "errors":errors}
+        
+        except Exception as E:
+            print("Error parsing or validating:\n{E} ")
+            main()
 
 
 
 def main(**kwargs):
-    print("---------------------------------------\nType Q to exit program\nType M to return to main\nPress enter when done\n---------------------------------------\n")
+    print("---------------------------------------\nType Q to exit program\nType M to return to main\nPress enter for next step\n---------------------------------------\n")
 
-    if "schemaDir" in kwargs and kwargs["schemaDir"]:
+    if "schemaDir" in kwargs and kwargs["schemaDir"]: # The double condition used for checking if key in kwargs, and it's not empty or none
         fsaSchema = str(kwargs["schemaDir"])
     else:
         fsaSchema = extraPrompt(str("Enter the absolute path of the directory containing the FSA029 schema: "))
@@ -105,19 +130,20 @@ def main(**kwargs):
         fsaSubmission = extraPrompt(str("Enter the absolute path of the FSA029 submission: "))
 
 
-    fsaSchema, fsaSubmission = fsaInput(fsaSchema, fsaSubmission)
-    validateResults = validate(fsaSchema, fsaSubmission)
+    fsaSchema, fsaSubmission = fsaInput(fsaSchema, fsaSubmission) # Returns any changes made to the schema or submission through input checking function
+
+    validateResults = validate(fsaSchema, fsaSubmission) 
     
-    match validateResults:
-        case True:
-            print("Submission successfully validated against schema.")
-        case False:
-            print("Submission unsuccessful validated against schema.")
+    
+    if validateResults.get("success") == True:
+        print("Submission successfully validated against schema.")
+    elif validateResults.get("success") == False:
+        print(f"Submission unsuccessful validated against schema:\n{validateResults.get('errors')}")
 
 
 if __name__ == "__main__":
     args = {}
-    for arg in sys.argv[1:]:
+    for arg in sys.argv[1:]: # Case for handling passed args in cmd line
         if "=" in arg:
             key, val = arg.split("=", 1)
             args[key] = val

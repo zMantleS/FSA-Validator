@@ -20,3 +20,10 @@ Or, you can pass arguments into a command line to include the paths for both sch
 ## Notes
 
 The FSA submission file does not need to be in the same directory as the FSA schema directory. However, the CommonTypes schema must be in the same source directory as the FSA schema.
+
+The schema file is assumed to be named "FSA029-Schema.xsd". Its directory name doesn't matter, as well as the submission name.
+
+
+## The extra mile
+
+a) In the schema file, the element "PartnershipsSoleTraders" is not expected
