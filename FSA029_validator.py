@@ -111,7 +111,7 @@ def validate(fsaSchema: str, fsaSubmission: str):
                 return {"success": False, "errors":errors}
         
         except Exception as E:
-            print("Error parsing or validating:\n{E} ")
+            print(f"Error parsing or validating:\n{E} ")
             main()
 
 
