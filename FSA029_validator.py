@@ -83,7 +83,7 @@ def validate(fsaSchema: str, fsaSubmission: str):
             if schemaLocation is not None:
                 schemaLocation.set("schemaLocation", "CommonTypes-Schema.xsd")
             else:
-                extraPrompt(f"Unable to find schemaLocation: ")
+                extraPrompt(f"Unable to find schemaLocation for CommonTypes: ")
                 return main()
             
         except Exception as E:
